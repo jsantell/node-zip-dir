@@ -10,6 +10,8 @@ var expect = chai.expect;
 var sampleZipPath = path.join(__dirname, 'fixtures/sampleZip');
 var xpiPath = path.join(__dirname, 'my.xpi');
 var outputPath = path.join(__dirname, 'myxpi/');
+var emptyDirPath = path.join(sampleZipPath, 'emptyDir');
+var emptyDirOutputPath = path.join(outputPath, 'emptyDir');
 
 describe('zip-dir', function () {
   describe('creates a zip buffer', function () {
@@ -39,7 +41,7 @@ describe('zip-dir', function () {
         done();
       });
     });
-
+    
     it('returns an error when dirPath is a file', function (done) {
       zipDir(path.join(sampleZipPath, 'file1.json'), function (err, buffer) {
         expect(err).to.be.ok;
@@ -50,8 +52,13 @@ describe('zip-dir', function () {
   });
 
   describe('writes a zip file', function () {
-    beforeEach(zipAndUnzip);
+    beforeEach(function (done) {
+      addEmpty(function () {
+        zipAndUnzip(done);
+      });
+    });
     afterEach(cleanUp);
+  
     it('compresses and unpacks and all files match', function (done) {
       var files = [
         'file1.json',
@@ -62,6 +69,14 @@ describe('zip-dir', function () {
       ];
       files.forEach(compareFiles);
       done();
+    });
+
+    it('retains empty directories', function (done) {
+      fs.stat(emptyDirOutputPath, function (err, stat) {
+        expect(err).to.not.be.ok;
+        expect(stat.isDirectory()).to.be.ok;
+        done();
+      });
     });
   });
 });
@@ -83,6 +98,13 @@ function zipAndUnzip (done) {
 
 function cleanUp (done) {
   fs.remove(outputPath, function () {
-    fs.remove(xpiPath, done);
+    fs.remove(xpiPath, function () {
+      fs.remove(emptyDirPath, done);
+    });
   });
+}
+
+// Adds an empty directory for testing
+function addEmpty (done) {
+  fs.mkdirp(emptyDirPath, done);
 }

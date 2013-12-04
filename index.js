@@ -43,6 +43,7 @@ function zipBuffer (rootDir, callback) {
   function dive (dir, callback) {
     fs.readdir(dir, function (err, files) {
       if (err) return callback(err);
+      if (!files.length) return callback();
       var count = files.length;
       files.forEach(function (file) {
         var fullPath = path.resolve(dir, file);
