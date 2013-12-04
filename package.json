@@ -1,5 +1,5 @@
 {
-  "name": "node-zip-dir",
+  "name": "zip-dir",
   "version": "0.1.0",
   "description": "Zips up directories into buffers or saves zipped files to disk",
   "main": "index.js",
