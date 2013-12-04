@@ -26,6 +26,9 @@ module.exports = function zipWrite (rootDir, saveTo, callback) {
 function zipBuffer (rootDir, callback) {
   var zip = new Zip();
   var folders = {};
+  // Resolve the path so we can remove trailing slash if provided
+  rootDir = path.resolve(rootDir);
+
   folders[rootDir] = zip;
 
   dive(rootDir, function (err) {

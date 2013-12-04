@@ -14,7 +14,17 @@ var outputPath = path.join(__dirname, 'myxpi/');
 describe('zip-dir', function () {
   describe('creates a zip buffer', function () {
     it('returns a usable zip buffer', function (done) {
+      console.log(sampleZipPath);
       zipDir(sampleZipPath, function (err, buffer) {
+        expect(err).to.not.be.ok;
+        var zip = new Zip();
+        zip.load(buffer);
+        done();
+      });
+    });
+    
+    it('works with a trailing `/` in the path', function (done) {
+      zipDir(path.join(sampleZipPath, path.sep), function (err, buffer) {
         expect(err).to.not.be.ok;
         var zip = new Zip();
         zip.load(buffer);
