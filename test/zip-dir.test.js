@@ -9,7 +9,7 @@ var expect = chai.expect;
 
 var sampleZipPath = path.join(__dirname, 'fixtures/sampleZip');
 var xpiPath = path.join(__dirname, 'my.xpi');
-var outputPath = path.join(__dirname + 'myxpi/');
+var outputPath = path.join(__dirname, 'myxpi/');
 
 describe('zip-dir', function () {
   describe('creates a zip buffer', function () {
