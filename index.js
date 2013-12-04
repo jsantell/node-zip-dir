@@ -25,7 +25,9 @@ function zipBuffer (rootDir, callback) {
   folders[rootDir] = zip;
 
   dive(rootDir, function (err) {
-    callback(err, zip.generate({
+    if (err) return callback(err);
+
+    callback(null, zip.generate({
       compression: 'DEFLATE',
       type: 'nodebuffer'
     }));
@@ -33,6 +35,7 @@ function zipBuffer (rootDir, callback) {
 
   function dive (dir, callback) {
     fs.readdir(dir, function (err, files) {
+      if (err) return callback(err);
       var count = files.length;
       files.forEach(function (file) {
         var fullPath = path.resolve(dir, file);

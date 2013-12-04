@@ -21,6 +21,22 @@ describe('zip-dir', function () {
         done();
       });
     });
+
+    it('returns an error when dirPath doesn\'t exist', function (done) {
+      zipDir(xpiPath, function (err, buffer) {
+        expect(err).to.be.ok;
+        expect(buffer).to.not.be.ok;
+        done();
+      });
+    });
+
+    it('returns an error when dirPath is a file', function (done) {
+      zipDir(path.join(sampleZipPath, 'file1.json'), function (err, buffer) {
+        expect(err).to.be.ok;
+        expect(buffer).to.not.be.ok;
+        done();
+      });
+    });
   });
 
   describe('writes a zip file', function () {
