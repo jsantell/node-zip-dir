@@ -11,9 +11,6 @@
     "url": "http://github.com/jsantell/node-zip-dir"
   },
   "author": "Jordan Santell",
-  "dependencies": {
-    "jszip": "*"
-  },
   "devDependencies": {
     "mocha": "*",
     "chai": "*",

@@ -1,6 +1,10 @@
-var Zip = require('jszip');
 var fs = require('fs');
 var path = require('path');
+// Use local version of JSZip, as the version in `npm` is a fork
+// and not up to date, and failing on v0.8, so this is an unfortunate
+// work around
+// from: https://github.com/Stuk/jszip
+var Zip = require('./jszip');
 
 module.exports = function zipWrite (rootDir, saveTo, callback) {
   if (!callback) {

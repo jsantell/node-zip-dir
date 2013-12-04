@@ -1,4 +1,4 @@
-var Zip = require('jszip');
+var Zip = require('../jszip');
 var unzip = require('unzip');
 var zipDir = require('../index');
 var path = require('path');
