@@ -1,6 +1,6 @@
 {
   "name": "zip-dir",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Zips up directories into buffers or saves zipped files to disk",
   "main": "index.js",
   "scripts": {

@@ -6,15 +6,17 @@ var path = require('path');
 // from: https://github.com/Stuk/jszip
 var Zip = require('./jszip');
 
-module.exports = function zipWrite (rootDir, saveTo, callback) {
+module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
-    callback = saveTo;
-    saveTo = null;
+    callback = options;
+    options = {};
   }
 
-  zipBuffer(rootDir, function (err, buffer) {
-    if (saveTo) {
-      fs.writeFile(saveTo, buffer, { encoding: 'binary' }, function (err) {
+  options = options || {};
+
+  zipBuffer(rootDir, options, function (err, buffer) {
+    if (options.saveTo) {
+      fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
         callback(err, buffer);
       });
     } else {
@@ -23,7 +25,7 @@ module.exports = function zipWrite (rootDir, saveTo, callback) {
   });
 };
 
-function zipBuffer (rootDir, callback) {
+function zipBuffer (rootDir, options, callback) {
   var zip = new Zip();
   var folders = {};
   // Resolve the path so we can remove trailing slash if provided
@@ -59,6 +61,7 @@ function zipBuffer (rootDir, callback) {
   function addItem (fullPath, cb) {
     fs.stat(fullPath, function (err, stat) {
       if (err) return cb(err);
+      if (options.filter && !options.filter(fullPath, stat)) return cb();
       var dir = path.dirname(fullPath);
       var file = path.basename(fullPath);
       var parentZip;
