@@ -122,6 +122,62 @@ describe("zip-dir", function () {
       }
     });
   });
+
+  describe("`each` option", function () {
+    afterEach(cleanUp);
+
+    it("calls `each` with each path added to zip", function (done) {
+      var paths = [];
+      function each (p) {
+        paths.push(p);
+      }
+      zipDir(sampleZipPath, { each: each }, function (err, buffer) {
+        var files = [
+          "file1.json",
+          "tiny.gif",
+          "dir/",
+          "dir/file2.json",
+          "dir/file3.json",
+          "dir/deepDir",
+          "dir/deepDir/deeperDir",
+          "dir/deepDir/deeperDir/file4.json"
+        ].map(function (p) { return path.join.apply(path, [sampleZipPath].concat(p.split("/"))); });
+
+        files.forEach(function (p) {
+          expect(paths.indexOf(p)).to.not.equal(-1);
+          return p;
+        });
+
+        expect(paths.length).to.be.equal(files.length);
+        done();
+      });
+    });
+    
+    it("calls `each`, ignoring unadded files", function (done) {
+      var paths = [];
+      function each (p) { paths.push(p); }
+      function filter (p) { return /\.json$/.test(p) || fs.statSync(p).isDirectory(); }
+      zipDir(sampleZipPath, { each: each, filter: filter }, function (err, buffer) {
+        var files = [
+          "file1.json",
+          "dir/file2.json",
+          "dir/file3.json",
+          "dir/",
+          "dir/deepDir",
+          "dir/deepDir/deeperDir",
+          "dir/deepDir/deeperDir/file4.json"
+        ].map(function (p) { return path.join.apply(path, [sampleZipPath].concat(p.split("/"))); });
+
+        files.forEach(function (p) {
+          expect(paths.indexOf(p)).to.not.equal(-1);
+          return p;
+        });
+
+        expect(paths.length).to.be.equal(files.length);
+        done();
+      });
+    });
+  });
 });
 
 function compareFiles (file) {

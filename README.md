@@ -4,6 +4,12 @@ Zips up a directory and saves the zip to disk or returns as a buffer.
 
 [![Build Status](https://travis-ci.org/jsantell/node-zip-dir.png)](https://travis-ci.org/jsantell/node-zip-dir)
 
+## install
+
+```
+$ npm install zip-dir
+```
+
 ## example
 
 ```javascript
@@ -19,9 +25,16 @@ zipdir('/path/to/be/zipped', { saveTo: '~/myzip.zip' }, function (err, buffer) {
 });
 
 // Use a filter option to prevent zipping other zip files!
+// Keep in mind you have to allow a directory to descend into!
 zipdir('/path/to/be/zipped', { filter: (path, stat) => !/\.zip$/.test(path) }, function (err, buffer) {
   
 });
+
+// Use an `each` option to call a function everytime a file is added, and receives the path
+zipdir('/path/to/be/zipped', { each: path => console.log(p, "added!"), function (err, buffer) {
+
+});
+  
 ```
 
 ## methods
@@ -41,12 +54,11 @@ been saved to disk.
 
 * `saveTo` A path to save the buffer to.
 * `filter` A function that is called for all items to determine whether or not they should be added to the zip buffer. Function is called with the `fullPath` and a `stats` object ([fs.Stats](http://nodejs.org/api/fs.html#fs_class_fs_stats)). Return true to add the item; false otherwise. To include files within directories, directories must also pass this filter.
+* `each` A function that is called everytime a file or directory is added to the zip.
 
-## install
+## TODO
 
-```
-$ npm install zip-dir
-```
+* Add an option to not add empty directories if there are no valid children inside
 
 ## license
 

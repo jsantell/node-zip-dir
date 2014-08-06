@@ -67,10 +67,16 @@ function zipBuffer (rootDir, options, callback) {
       var parentZip;
       if (stat.isDirectory()) {
         parentZip = folders[dir];
+        if (options.each) {
+          options.each(fullPath);
+        }
         folders[fullPath] = parentZip.folder(file);
         dive(fullPath, cb);
       } else {
         fs.readFile(fullPath, function (err, data) {
+          if (options.each) {
+            options.each(path.join(dir, file));
+          }
           folders[dir].file(file, data);
           cb(err);
         });
