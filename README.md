@@ -2,7 +2,8 @@
 
 Zips up a directory and saves the zip to disk or returns as a buffer.
 
-[![Build Status](https://travis-ci.org/jsantell/node-zip-dir.png)](https://travis-ci.org/jsantell/node-zip-dir)
+[![Build Status](http://img.shields.io/travis/jsantell/node-zip-dir.svg?style=flat-square)](https://travis-ci.org/jsantell/node-zip-dir)
+[![Build Status](http://img.shields.io/npm/v/zip-dir.svg?style=flat-square)](https://www.npmjs.org/package/zip-dir)
 
 ## install
 
