@@ -18,5 +18,8 @@
     "unzip": "*",
     "fs-extra": "*"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "jszip": "^2.4.0"
+  }
 }

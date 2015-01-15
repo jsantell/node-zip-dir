@@ -4,7 +4,7 @@ var path = require('path');
 // and not up to date, and failing on v0.8, so this is an unfortunate
 // work around
 // from: https://github.com/Stuk/jszip
-var Zip = require('./jszip');
+var Zip = require('jszip');
 
 module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
