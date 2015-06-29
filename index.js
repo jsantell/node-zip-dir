@@ -49,7 +49,7 @@ function zipBuffer (rootDir, options, callback) {
       var count = files.length;
       files.forEach(function (file) {
         var fullPath = path.resolve(dir, file);
-        addItem(fullPath, function (err) {
+        addEntry(fullPath, function (err) {
           if (!--count) {
             callback(err);
           }
@@ -58,13 +58,13 @@ function zipBuffer (rootDir, options, callback) {
     });
   }
 
-  function addItem (fullPath, cb) {
+  function addEntry (fullPath, cb) {
     fs.stat(fullPath, function (err, stat) {
       if (err) return cb(err);
       if (options.filter && !options.filter(fullPath, stat)) return cb();
       var dir = path.dirname(fullPath);
       var file = path.basename(fullPath);
-      var parentZip;
+      var parentZip, write;
       if (stat.isDirectory()) {
         parentZip = folders[dir];
         if (options.each) {
@@ -73,14 +73,25 @@ function zipBuffer (rootDir, options, callback) {
         folders[fullPath] = parentZip.folder(file);
         dive(fullPath, cb);
       } else {
-        fs.readFile(fullPath, function (err, data) {
-          if (options.each) {
-            options.each(path.join(dir, file));
+        write = createEntry(cb, folders[dir], file);
+        if (options.each) {
+          options.each(path.join(dir, file), write);
+          if (!write.intercede) {
+            fs.readFile(fullPath, write);
           }
-          folders[dir].file(file, data);
-          cb(err);
-        });
+        } else {
+          fs.readFile(fullPath, write);
+        }
       }
     });
+  }
+
+  function createEntry (cb, dir, file) {
+    return function write(err, data) {
+      write.intercede = true;
+
+      dir.file(file, data);
+      cb(err);
+    }
   }
 }
