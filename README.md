@@ -32,10 +32,43 @@ zipdir('/path/to/be/zipped', { filter: (path, stat) => !/\.zip$/.test(path) }, f
 });
 
 // Use an `each` option to call a function everytime a file is added, and receives the path
-zipdir('/path/to/be/zipped', { each: path => console.log(p, "added!"), function (err, buffer) {
+zipdir('/path/to/be/zipped', { each: path => console.log(path, "added!"), function (err, buffer) {
 
 });
+
+// Use an `each` option to substitute files, method receives the path and write function
+function each (path, write) {
+  var err = null;
+  // `write` is undefined when `each` option is called for directories
+  if (write) {
+    write(err, 'example data for ' + path);
+  }
+}
+zipdir('/path/to/be/zipped', { each: each, function (err, buffer) {
+
+});
+
+// Use an `each` option to modify files asynchronously, method receives the path and write function
+function each (path, write) {
+  var err = null, re = /\.js$/;
   
+  if (write && path.test(re)) {
+    // Must be set to true to wait for write, without this the default read/write 
+    // will occur during next event loop
+    write.intercede = true;
+    
+    // Read the file contents asynchronously, may pass write as the callback 
+    // or a function that eventually calls: `write(err, data)`
+    // Will fail if `err` argument is not null/undefined
+    fs.readFile(path, write);
+  } else if (!write) {
+    console.log('Detected directory:', path);
+  }
+}
+zipdir('/path/to/be/zipped', { each: each, function (err, buffer) {
+
+});
+
 ```
 
 ## methods
