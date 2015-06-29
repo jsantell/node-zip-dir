@@ -77,10 +77,10 @@ function zipBuffer (rootDir, options, callback) {
         if (options.each) {
           options.each(path.join(dir, file), write);
           if (!write.intercede) {
-            fs.readFile(fullpath, write);
+            fs.readFile(fullPath, write);
           }
         } else {
-          fs.readFile(fullpath, write);
+          fs.readFile(fullPath, write);
         }
       }
     });
