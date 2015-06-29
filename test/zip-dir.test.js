@@ -177,6 +177,29 @@ describe("zip-dir", function () {
         done();
       });
     });
+
+    it("can intercede write", function (done) {
+      function each(path, write) {
+        var err = null;
+        if (write) {
+          write(err, 'example data for ' + path);
+        }
+      }
+
+      zipDir(sampleZipPath, { each: each }, done);
+    });
+
+    it("can intercede write asynchronously", function (done) {
+      function each(path, write) {
+        if (write) {
+          write.intercede = true;
+
+          fs.readFile(path, write);
+        }
+      }
+
+      zipDir(sampleZipPath, { each: each }, done);
+    });
   });
 });
 
