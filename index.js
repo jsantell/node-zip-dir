@@ -87,7 +87,7 @@ function zipBuffer (rootDir, options, callback) {
   }
   
   function createEntry (cb, dir, file) {
-    function write(err, data) {
+    return function write(err, data) {
       write.intercede = true;
       
       dir.file(file, data);
