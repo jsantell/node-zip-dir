@@ -6,6 +6,10 @@ var path = require('path');
 // from: https://github.com/Stuk/jszip
 var Zip = require('jszip');
 
+// Limiting the number of files read at the same time
+var maxOpenFiles = 500;
+var openFiles = 0;
+
 module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
     callback = options;
@@ -73,13 +77,20 @@ function zipBuffer (rootDir, options, callback) {
         folders[fullPath] = parentZip.folder(file);
         dive(fullPath, cb);
       } else {
-        fs.readFile(fullPath, function (err, data) {
-          if (options.each) {
-            options.each(path.join(dir, file));
-          }
-          folders[dir].file(file, data);
-          cb(err);
-        });
+        if (openFiles < maxOpenFiles) {
+          openFiles++;
+          fs.readFile(fullPath, function (err, data) {
+            if (options.each) {
+              options.each(path.join(dir, file));
+            }
+            folders[dir].file(file, data);
+            openFiles--;
+            cb(err);
+          });
+        }
+        else {
+          addItem(fullPath, cb);
+        }
       }
     });
   }
