@@ -9,6 +9,10 @@ var Zip = require('jszip');
 // Limiting the number of files read at the same time
 var maxOpenFiles = 500;
 var openFiles = 0;
+// when the number of opened files has reached the limit, we put next files
+// to read inside filesToRead, and they will be read after some files will be
+// closed
+var filesToReadQueue = [];
 
 module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
@@ -77,7 +81,7 @@ function zipBuffer (rootDir, options, callback) {
         folders[fullPath] = parentZip.folder(file);
         dive(fullPath, cb);
       } else {
-        if (openFiles < maxOpenFiles) {
+        var readFunc = function() {
           openFiles++;
           fs.readFile(fullPath, function (err, data) {
             if (options.each) {
@@ -85,11 +89,20 @@ function zipBuffer (rootDir, options, callback) {
             }
             folders[dir].file(file, data);
             openFiles--;
+            // if there is a file in the queue, it's time to read it
+            var readNextFile = filesToReadQueue.shift();
+            if (readNextFile) {
+                readNextFile();
+            }
             cb(err);
           });
         }
+        if (openFiles < maxOpenFiles) {
+          readFunc();
+        }
         else {
-          addItem(fullPath, cb);
+          // too many opened file, let's put the file in a queue
+          filesToReadQueue.push(readFunc)
         }
       }
     });
