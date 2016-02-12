@@ -1,5 +1,7 @@
 var fs = require('fs');
 var path = require('path');
+var asyncLib = require('async');
+
 // Use local version of JSZip, as the version in `npm` is a fork
 // and not up to date, and failing on v0.8, so this is an unfortunate
 // work around
@@ -8,7 +10,6 @@ var Zip = require('jszip');
 
 // Limiting the number of files read at the same time
 var maxOpenFiles = 500;
-var openFiles = 0;
 
 module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
@@ -62,6 +63,16 @@ function zipBuffer (rootDir, options, callback) {
     });
   }
 
+  var fileQueue = asyncLib.queue(function (task, callback) {
+    fs.readFile(task.fullPath, function (err, data) {
+      if (options.each) {
+        options.each(path.join(task.dir, task.file));
+      }
+      folders[task.dir].file(task.file, data);
+      callback(err);
+    });
+  }, maxOpenFiles);
+
   function addItem (fullPath, cb) {
     fs.stat(fullPath, function (err, stat) {
       if (err) return cb(err);
@@ -77,20 +88,7 @@ function zipBuffer (rootDir, options, callback) {
         folders[fullPath] = parentZip.folder(file);
         dive(fullPath, cb);
       } else {
-        if (openFiles < maxOpenFiles) {
-          openFiles++;
-          fs.readFile(fullPath, function (err, data) {
-            if (options.each) {
-              options.each(path.join(dir, file));
-            }
-            folders[dir].file(file, data);
-            openFiles--;
-            cb(err);
-          });
-        }
-        else {
-          addItem(fullPath, cb);
-        }
+        fileQueue.push({ fullPath: fullPath, dir: dir, file: file }, cb);
       }
     });
   }
