@@ -8,6 +8,7 @@ var chai = require("chai");
 var expect = chai.expect;
 
 var sampleZipPath = path.join(__dirname, "fixtures/sampleZip");
+var emptySubFolderSampleZipPath = path.join(__dirname, "fixtures/emptySubFolderSampleZip");
 var xpiPath = path.join(__dirname, "my.xpi");
 var outputPath = path.join(__dirname, "myxpi/");
 var emptyDirPath = path.join(sampleZipPath, "emptyDir");
@@ -53,7 +54,7 @@ describe("zip-dir", function () {
   describe("writes a zip file", function () {
     beforeEach(function (done) {
       addEmpty(function () {
-        zipAndUnzip({ saveTo: xpiPath }, done);
+        zipAndUnzip(sampleZipPath, {saveTo: xpiPath}, done);
       });
     });
     afterEach(cleanUp);
@@ -66,7 +67,9 @@ describe("zip-dir", function () {
         "dir/file3.json",
         "dir/deepDir/deeperDir/file4.json"
       ];
-      files.forEach(compareFiles);
+      files.forEach(function(file){
+        compareFiles(file, sampleZipPath);
+      });
       done();
     });
 
@@ -83,14 +86,16 @@ describe("zip-dir", function () {
     afterEach(cleanUp);
 
     it("filters out by file name, fs.Stat", function (done) {
-      zipAndUnzip({ saveTo: xpiPath, filter: jsonOnly }, function () {
+      zipAndUnzip(sampleZipPath, {saveTo: xpiPath, filter: jsonOnly}, function () {
         var files = [
           "file1.json",
           "dir/file2.json",
           "dir/file3.json",
           "dir/deepDir/deeperDir/file4.json"
         ];
-        files.forEach(compareFiles);
+        files.forEach(function(file){
+          compareFiles(file, sampleZipPath);
+        });
 
         fs.stat(path.join(outputPath, "tiny.gif"), function (err, stat) {
           expect(err).to.be.ok;
@@ -98,18 +103,20 @@ describe("zip-dir", function () {
         });
       });
 
-      function jsonOnly (name, stat) {
+      function jsonOnly(name, stat) {
         return /\.json$/.test(name) || stat.isDirectory();
       }
     });
 
     it("filtering out directories keeps it shallow", function (done) {
-      zipAndUnzip({ saveTo: xpiPath, filter: noDirs }, function () {
+      zipAndUnzip(sampleZipPath, {saveTo: xpiPath, filter: noDirs}, function () {
         var files = [
           "file1.json",
           "tiny.gif"
         ];
-        files.forEach(compareFiles);
+        files.forEach(function(file){
+          compareFiles(file, sampleZipPath);
+        });
 
         fs.stat(path.join(outputPath, "dir"), function (err, stat) {
           expect(err).to.be.ok;
@@ -117,7 +124,7 @@ describe("zip-dir", function () {
         });
       });
 
-      function noDirs (name, stat) {
+      function noDirs(name, stat) {
         return !stat.isDirectory();
       }
     });
@@ -128,10 +135,12 @@ describe("zip-dir", function () {
 
     it("calls `each` with each path added to zip", function (done) {
       var paths = [];
-      function each (p) {
+
+      function each(p) {
         paths.push(p);
       }
-      zipDir(sampleZipPath, { each: each }, function (err, buffer) {
+
+      zipDir(sampleZipPath, {each: each}, function (err, buffer) {
         var files = [
           "file1.json",
           "tiny.gif",
@@ -141,7 +150,9 @@ describe("zip-dir", function () {
           "dir/deepDir",
           "dir/deepDir/deeperDir",
           "dir/deepDir/deeperDir/file4.json"
-        ].map(function (p) { return path.join.apply(path, [sampleZipPath].concat(p.split("/"))); });
+        ].map(function (p) {
+          return path.join.apply(path, [sampleZipPath].concat(p.split("/")));
+        });
 
         files.forEach(function (p) {
           expect(paths.indexOf(p)).to.not.equal(-1);
@@ -152,12 +163,19 @@ describe("zip-dir", function () {
         done();
       });
     });
-    
+
     it("calls `each`, ignoring unadded files", function (done) {
       var paths = [];
-      function each (p) { paths.push(p); }
-      function filter (p) { return /\.json$/.test(p) || fs.statSync(p).isDirectory(); }
-      zipDir(sampleZipPath, { each: each, filter: filter }, function (err, buffer) {
+
+      function each(p) {
+        paths.push(p);
+      }
+
+      function filter(p) {
+        return /\.json$/.test(p) || fs.statSync(p).isDirectory();
+      }
+
+      zipDir(sampleZipPath, {each: each, filter: filter}, function (err, buffer) {
         var files = [
           "file1.json",
           "dir/file2.json",
@@ -166,7 +184,9 @@ describe("zip-dir", function () {
           "dir/deepDir",
           "dir/deepDir/deeperDir",
           "dir/deepDir/deeperDir/file4.json"
-        ].map(function (p) { return path.join.apply(path, [sampleZipPath].concat(p.split("/"))); });
+        ].map(function (p) {
+          return path.join.apply(path, [sampleZipPath].concat(p.split("/")));
+        });
 
         files.forEach(function (p) {
           expect(paths.indexOf(p)).to.not.equal(-1);
@@ -178,16 +198,43 @@ describe("zip-dir", function () {
       });
     });
   });
+
+  describe("`noEmptyDirectories` option", function () {
+    afterEach(cleanUp);
+    it("calls `noEmptyDirectories` with an empty root directory", function (done) {
+      var ERROR_MSG = 'Cannot have an empty root directory';
+      addEmpty(function() {
+        zipDir(emptyDirPath, {noEmptyDirectories: true}, function (err, buffer) {
+          expect(err).to.be.equal(ERROR_MSG);
+          expect(buffer).to.be.a('null');
+          done();
+        });
+      });
+    });
+
+    it("calls `noEmptyDirectories` with an empty sub directory", function (done) {
+      this.timeout(3000);
+       var files = [
+          "file.txt"
+        ];
+        zipAndUnzip(emptySubFolderSampleZipPath, {saveTo: xpiPath, noEmptyDirectories: true}, function(){
+          files.forEach(function(file){
+            compareFiles(file, emptySubFolderSampleZipPath);
+            done();
+          });
+        })
+      });
+    });
 });
 
-function compareFiles (file) {
-  var zipBuffer = fs.readFileSync(path.join(sampleZipPath, file));
+function compareFiles (file, inputPath) {
+  var zipBuffer = fs.readFileSync(path.join(inputPath, file));
   var fileBuffer = fs.readFileSync(path.join(outputPath, file));
   expect(bufferEqual(zipBuffer, fileBuffer)).to.be.ok;
 }
 
-function zipAndUnzip (options, done) {
-  zipDir(sampleZipPath, options, function (err, buffer) {
+function zipAndUnzip (inputPath, options, done) {
+  zipDir(inputPath, options, function (err, buffer) {
     if (err) throw err;
     fs.createReadStream(xpiPath)
       .pipe(unzip.Extract({ path: outputPath }))

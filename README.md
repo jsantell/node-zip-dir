@@ -56,10 +56,7 @@ been saved to disk.
 * `saveTo` A path to save the buffer to.
 * `filter` A function that is called for all items to determine whether or not they should be added to the zip buffer. Function is called with the `fullPath` and a `stats` object ([fs.Stats](http://nodejs.org/api/fs.html#fs_class_fs_stats)). Return true to add the item; false otherwise. To include files within directories, directories must also pass this filter.
 * `each` A function that is called everytime a file or directory is added to the zip.
-
-## TODO
-
-* Add an option to not add empty directories if there are no valid children inside
+* `noEmptyDirectories` disallow empty directories from being zipped. If the root directory is empty an error will be thrown.
 
 ## license
 
