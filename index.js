@@ -11,6 +11,9 @@ var Zip = require('jszip');
 // Limiting the number of files read at the same time
 var maxOpenFiles = 500;
 
+//Error Message
+var ROOTDIR_CANNOT_BE_EMPTY = 'Cannot have an empty root directory';
+
 module.exports = function zipWrite (rootDir, options, callback) {
   if (!callback) {
     callback = options;
@@ -20,7 +23,9 @@ module.exports = function zipWrite (rootDir, options, callback) {
   options = options || {};
 
   zipBuffer(rootDir, options, function (err, buffer) {
-    if (options.saveTo) {
+    if(err){
+      callback(err, null);
+    } else if (options.saveTo) {
       fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
         callback(err, buffer);
       });
@@ -36,6 +41,8 @@ function zipBuffer (rootDir, options, callback) {
   // Resolve the path so we can remove trailing slash if provided
   rootDir = path.resolve(rootDir);
 
+  folders['rootDir'] = rootDir;
+
   folders[rootDir] = zip;
 
   dive(rootDir, function (err) {
@@ -50,7 +57,21 @@ function zipBuffer (rootDir, options, callback) {
   function dive (dir, callback) {
     fs.readdir(dir, function (err, files) {
       if (err) return callback(err);
-      if (!files.length) return callback();
+      if(!files.length){
+        if(folders.rootDir === dir && options.noEmptyDirectories){
+          return callback(ROOTDIR_CANNOT_BE_EMPTY)
+        } else if(options.noEmptyDirectories){
+          var rootDir = dir.substring(0, dir.lastIndexOf('/'));
+          var baseName = path.basename(dir);
+          var parentZip = folders[rootDir];
+          if(parentZip){
+            parentZip.remove(baseName);
+          }
+          return callback();
+        } else {
+          return callback();
+        }
+      }
       var count = files.length;
       files.forEach(function (file) {
         var fullPath = path.resolve(dir, file);
