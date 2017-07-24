@@ -8,7 +8,6 @@ var chai = require("chai");
 var expect = chai.expect;
 
 var sampleZipPath = path.join(__dirname, "fixtures/sampleZip");
-var emptySampleZipPath = path.join(__dirname, "fixtures/emptySampleZip");
 var emptySubFolderSampleZipPath = path.join(__dirname, "fixtures/emptySubFolderSampleZip");
 var xpiPath = path.join(__dirname, "my.xpi");
 var outputPath = path.join(__dirname, "myxpi/");
@@ -204,10 +203,12 @@ describe("zip-dir", function () {
     afterEach(cleanUp);
     it("calls `noEmptyDirectories` with an empty root directory", function (done) {
       var ERROR_MSG = 'Cannot have an empty root directory';
-      zipDir(emptySampleZipPath, {noEmptyDirectories: true}, function (err, buffer) {
-        expect(err).to.be.equal(ERROR_MSG);
-        expect(buffer).to.be.a('null');
-        done();
+      addEmpty(function() {
+        zipDir(emptyDirPath, {noEmptyDirectories: true}, function (err, buffer) {
+          expect(err).to.be.equal(ERROR_MSG);
+          expect(buffer).to.be.a('null');
+          done();
+        });
       });
     });
 
