@@ -33,10 +33,10 @@ module.exports = function zipWrite (rootDir, options, callback) {
 function zipBuffer (rootDir, options, callback) {
   var zip = new Zip();
   var folders = {};
+
   // Resolve the path so we can remove trailing slash if provided
   rootDir = path.resolve(rootDir);
-
-  folders[rootDir] = zip;
+  folders[rootDir] = createRootFolder();
 
   dive(rootDir, function (err) {
     if (err) return callback(err);
@@ -46,6 +46,16 @@ function zipBuffer (rootDir, options, callback) {
       type: 'nodebuffer'
     }));
   });
+
+  function createRootFolder () {
+    if (!options.rootPath) return zip;
+    var rootFolder = zip;
+    var splitPath = path.normalize(options.rootPath).split('/')
+    for (var i = 0; i < splitPath.length; ++i) {
+      rootFolder = rootFolder.folder(splitPath[i]);
+    }
+    return rootFolder;
+  }
 
   function dive (dir, callback) {
     fs.readdir(dir, function (err, files) {
