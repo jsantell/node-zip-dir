@@ -19,8 +19,7 @@ describe("zip-dir", function () {
       zipDir(sampleZipPath, function (err, buffer) {
         expect(err).to.not.be.ok;
         var zip = new Zip();
-        zip.load(buffer);
-        done();
+        zip.loadAsync(buffer).then(function () { done(); });
       });
     });
 
@@ -28,8 +27,7 @@ describe("zip-dir", function () {
       zipDir(path.join(sampleZipPath, path.sep), function (err, buffer) {
         expect(err).to.not.be.ok;
         var zip = new Zip();
-        zip.load(buffer);
-        done();
+        zip.loadAsync(buffer).then(function () { done(); });
       });
     });
 

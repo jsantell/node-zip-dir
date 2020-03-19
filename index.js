@@ -1,32 +1,40 @@
 var fs = require('fs');
 var path = require('path');
 var asyncLib = require('async');
-
-// Use local version of JSZip, as the version in `npm` is a fork
-// and not up to date, and failing on v0.8, so this is an unfortunate
-// work around
-// from: https://github.com/Stuk/jszip
 var Zip = require('jszip');
 
 // Limiting the number of files read at the same time
 var maxOpenFiles = 500;
 
 module.exports = function zipWrite (rootDir, options, callback) {
-  if (!callback) {
+  if (!callback && typeof options === 'function') {
     callback = options;
     options = {};
   }
 
   options = options || {};
 
-  zipBuffer(rootDir, options, function (err, buffer) {
-    if (options.saveTo) {
-      fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
-        callback(err, buffer);
-      });
-    } else {
-      callback(err, buffer);
-    }
+  return new Promise(function (resolve, reject) {
+    zipBuffer(rootDir, options, function (err, buffer) {
+      if (!err && options.saveTo) {
+        fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
+          finish(err);
+        });
+      } else {
+        finish(err);
+      }
+
+      function finish (err) {
+        if (callback) {
+          callback(err, buffer);
+        }
+        if (err) {
+          reject(err);
+        } else {
+          resolve(buffer);
+        }
+      }
+    });
   });
 };
 
@@ -41,10 +49,14 @@ function zipBuffer (rootDir, options, callback) {
   dive(rootDir, function (err) {
     if (err) return callback(err);
 
-    callback(null, zip.generate({
+    zip.generateAsync({
       compression: 'DEFLATE',
       type: 'nodebuffer'
-    }));
+    }).then(function (buffer) {
+      callback(null, buffer);
+    }).catch(function (error) {
+      callback(error);
+    });
   });
 
   function dive (dir, callback) {
