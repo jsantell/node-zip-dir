@@ -178,6 +178,59 @@ describe("zip-dir", function () {
       });
     });
   });
+
+  describe('if empty directories should be omitted', function () {
+    afterEach(cleanUp);
+
+    it('empty root directory is not allowed by default', function (done) {
+      zipDir(sampleZipPath, {
+        filter: nothing, omitEmptyDirs: true
+      }, function (err) {
+        expect(err).to.be.ok;
+        done();
+      });
+    });
+
+    it('empty root directory can be allowed', function (done) {
+      zipDir(sampleZipPath, {
+        saveTo: xpiPath,
+        filter: nothing,
+        omitEmptyDirs: true,
+        allowEmptyRoot: true
+      }, function () {
+        fs.stat(xpiPath, function (err, stat) {
+          expect(err).to.not.be.ok;
+          expect(stat.size).to.equal(22);
+          done();
+        });
+      });
+    });
+
+    it('empty nested directory will be omitted', function (done) {
+      zipAndUnzip({
+        saveTo: xpiPath, filter: belowDir, omitEmptyDirs: true
+      }, function () {
+        var files = [
+          'file1.json',
+          'tiny.gif'
+        ];
+        files.forEach(compareFiles);
+
+        fs.stat(path.join(outputPath, 'dir'), function (err, stat) {
+          expect(err).to.be.ok;
+          done();
+        });
+      });
+
+      function belowDir (name) {
+        return !/\/dir\//.test(name)
+      }
+    });
+
+    function nothing () {
+      return false
+    }
+  });
 });
 
 function compareFiles (file) {

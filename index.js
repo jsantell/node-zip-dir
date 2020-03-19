@@ -41,6 +41,14 @@ function zipBuffer (rootDir, options, callback) {
   dive(rootDir, function (err) {
     if (err) return callback(err);
 
+    if (options.omitEmptyDirs) {
+      if (!removeEmptyDirs(zip)) {
+        if (!options.allowEmptyRoot) {
+          return callback(new Error('Empty root directory not allowed.'));
+        }
+      }
+    }
+
     callback(null, zip.generate({
       compression: 'DEFLATE',
       type: 'nodebuffer'
@@ -91,5 +99,17 @@ function zipBuffer (rootDir, options, callback) {
         fileQueue.push({ fullPath: fullPath, dir: dir, file: file }, cb);
       }
     });
+  }
+
+  function removeEmptyDirs (parentZip) {
+    var folders = parentZip.folder(/./);
+    for (var i = 0; i < folders.length; ++i) {
+      var folderName = path.basename(folders[i].name);
+      var childZip = parentZip.folder(folderName);
+      if (!removeEmptyDirs(childZip)) {
+        parentZip.remove(folderName);
+      }
+    }
+    return parentZip.file(/./).length > 0 || parentZip.folder(/./).length > 0;
   }
 }
