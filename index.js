@@ -43,7 +43,11 @@ function zipBuffer (rootDir, options, callback) {
 
     callback(null, zip.generate({
       compression: 'DEFLATE',
-      type: 'nodebuffer'
+      type: 'nodebuffer',
+      comment: options.comment,
+      compressionOptions: {
+        level: options.compressionLevel
+      }
     }));
   });
 
