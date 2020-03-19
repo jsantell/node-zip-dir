@@ -7,35 +7,44 @@ var Zip = require('jszip');
 var maxOpenFiles = 500;
 
 module.exports = function zipWrite (rootDir, options, callback) {
+  var promise, succeed, fail;
+
   if (!callback && typeof options === 'function') {
     callback = options;
     options = {};
   }
-
   options = options || {};
 
-  return new Promise(function (resolve, reject) {
-    zipBuffer(rootDir, options, function (err, buffer) {
-      if (!err && options.saveTo) {
-        fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
-          finish(err);
-        });
-      } else {
-        finish(err);
-      }
-
-      function finish (err) {
-        if (callback) {
-          callback(err, buffer);
-        }
-        if (err) {
-          reject(err);
-        } else {
-          resolve(buffer);
-        }
-      }
+  if (!callback) {
+    promise = new Promise(function (resolve, reject) {
+      succeed = resolve;
+      fail = reject;
     });
+  }
+
+  zipBuffer(rootDir, options, function (err, buffer) {
+    if (!err && options.saveTo) {
+      fs.writeFile(options.saveTo, buffer, { encoding: 'binary' }, function (err) {
+        finish(err);
+      });
+    } else {
+      finish(err);
+    }
+
+    function finish (err) {
+      if (callback) {
+        callback(err, buffer);
+      } else {
+        if (err) {
+          fail(err);
+        } else {
+          succeed(buffer);
+        }
+      }
+    }
   });
+
+  return promise;
 };
 
 function zipBuffer (rootDir, options, callback) {

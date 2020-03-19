@@ -64,7 +64,7 @@ describe("zip-dir", function () {
         "dir/file3.json",
         "dir/deepDir/deeperDir/file4.json"
       ];
-      files.forEach(compareFiles);
+      files.forEach(compareFiles.bind(null, '.'));
       done();
     });
 
@@ -72,6 +72,24 @@ describe("zip-dir", function () {
       fs.stat(emptyDirOutputPath, function (err, stat) {
         expect(err).to.not.be.ok;
         expect(stat.isDirectory()).to.be.ok;
+        done();
+      });
+    });
+  });
+
+  describe("if a root path is specified", function () {
+    afterEach(cleanUp);
+
+    it("stores input files and folders below the root path", function (done) {
+      zipAndUnzip({ saveTo: xpiPath, rootPath: 'first/second' }, function () {
+        var files = [
+          "file1.json",
+          "tiny.gif",
+          "dir/file2.json",
+          "dir/file3.json",
+          "dir/deepDir/deeperDir/file4.json"
+        ];
+        files.forEach(compareFiles.bind(null, 'first/second'));
         done();
       });
     });
@@ -88,7 +106,7 @@ describe("zip-dir", function () {
           "dir/file3.json",
           "dir/deepDir/deeperDir/file4.json"
         ];
-        files.forEach(compareFiles);
+        files.forEach(compareFiles.bind(null, '.'));
 
         fs.stat(path.join(outputPath, "tiny.gif"), function (err, stat) {
           expect(err).to.be.ok;
@@ -107,7 +125,7 @@ describe("zip-dir", function () {
           "file1.json",
           "tiny.gif"
         ];
-        files.forEach(compareFiles);
+        files.forEach(compareFiles.bind(null, '.'));
 
         fs.stat(path.join(outputPath, "dir"), function (err, stat) {
           expect(err).to.be.ok;
@@ -178,9 +196,9 @@ describe("zip-dir", function () {
   });
 });
 
-function compareFiles (file) {
+function compareFiles (rootPath, file) {
   var zipBuffer = fs.readFileSync(path.join(sampleZipPath, file));
-  var fileBuffer = fs.readFileSync(path.join(outputPath, file));
+  var fileBuffer = fs.readFileSync(path.join(outputPath, rootPath, file));
   expect(bufferEqual(zipBuffer, fileBuffer)).to.be.ok;
 }
 
