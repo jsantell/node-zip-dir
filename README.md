@@ -23,6 +23,11 @@ zipdir('/path/to/be/zipped', function (err, buffer) {
   // `buffer` is the buffer of the zipped file
 });
 
+zipdir('/path/to/be/zipped', { rootPath: 'archived' }, function (err, buffer) {
+  // Files and folders from `/path/to/be/zipped will`
+  // be stored in `archived/` in the output zip file.
+});
+
 zipdir('/path/to/be/zipped', { saveTo: '~/myzip.zip' }, function (err, buffer) {
   // `buffer` is the buffer of the zipped file
   // And the buffer was saved to `~/myzip.zip`
@@ -55,6 +60,7 @@ been saved to disk.
 
 #### Options
 
+* `rootPath` Folder path to create in the root of the zip file and place the input files and folder below it. Input files and folders will be placed directly to the zip file root by default.
 * `saveTo` A path to save the buffer to.
 * `filter` A function that is called for all items to determine whether or not they should be added to the zip buffer. Function is called with the `fullPath` and a `stats` object ([fs.Stats](http://nodejs.org/api/fs.html#fs_class_fs_stats)). Return true to add the item; false otherwise. To include files within directories, directories must also pass this filter.
 * `each` A function that is called everytime a file or directory is added to the zip.
