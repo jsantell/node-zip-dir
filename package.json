@@ -1,6 +1,6 @@
 {
   "name": "zip-dir",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Zips up directories into buffers or saves zipped files to disk",
   "main": "index.js",
   "scripts": {
@@ -12,11 +12,11 @@
   },
   "author": "Jordan Santell",
   "devDependencies": {
-    "mocha": "*",
-    "chai": "*",
     "buffer-equal": "*",
-    "unzip": "*",
-    "fs-extra": "*"
+    "chai": "*",
+    "fs-extra": "^9.0.1",
+    "mocha": "*",
+    "unzipper": "^0.10.11"
   },
   "license": "MIT",
   "dependencies": {
