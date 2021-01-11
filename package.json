@@ -2,7 +2,7 @@
   "name": "zip-dir",
   "version": "2.0.0",
   "description": "Zips up directories into buffers or saves zipped files to disk",
-  "main": "index.js",
+  "main": "./test/zip-dir.test.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec --ui bdd"
   },

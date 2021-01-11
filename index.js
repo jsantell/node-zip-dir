@@ -53,7 +53,12 @@ function zipBuffer (rootDir, options, callback) {
   // Resolve the path so we can remove trailing slash if provided
   rootDir = path.resolve(rootDir);
 
-  folders[rootDir] = zip;
+  //Add option to change inner folder name
+  if(options.innerFolderName && typeof options.innerFolderName === 'string'){
+    folders[rootDir] = zip.folder(options.innerFolderName);
+  }else{
+    folders[rootDir] = zip;
+  }
 
   dive(rootDir, function (err) {
     if (err) return callback(err);

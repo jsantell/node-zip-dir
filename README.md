@@ -38,6 +38,11 @@ zipdir('/path/to/be/zipped', { filter: (path, stat) => !/\.zip$/.test(path) }, f
 zipdir('/path/to/be/zipped', { each: path => console.log(p, "added!"), function (err, buffer) {
 
 });
+
+// Use a `innerFolderName` option which allows you to add an inner folder with a given name. 
+zipdir('/path/to/be/zipped', { innerFolderName: 'someFolderNameAsString'), function (err, buffer) {
+
+});
   
 ```
 

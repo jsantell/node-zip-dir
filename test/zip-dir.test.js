@@ -12,6 +12,7 @@ var xpiPath = path.join(__dirname, "my.xpi");
 var outputPath = path.join(__dirname, "myxpi/");
 var emptyDirPath = path.join(sampleZipPath, "emptyDir");
 var emptyDirOutputPath = path.join(outputPath, "emptyDir");
+const innerFolderName = "exampleOfAnInnerFolderName";
 
 describe("zip-dir", function () {
   describe("creates a zip buffer", function () {
@@ -99,6 +100,86 @@ describe("zip-dir", function () {
     });
   });
 
+  describe("Ensures that inner folder names can be defined", function () {
+    afterEach(cleanUp);
+
+    function customCompareMethod(file, customFilePath = "", combineCustomFilePathOrReplace = true) {
+      const zipBuffer = fs.readFileSync(path.join(sampleZipPath, file));
+      const combinedFilePath = path.join(customFilePath, file);
+      // Compare the different file buffers.
+      const fileBuffer = fs.readFileSync(
+        path.join(
+          outputPath,
+          combineCustomFilePathOrReplace ? combinedFilePath : customFilePath
+        )
+      );
+
+      expect(bufferEqual(zipBuffer, fileBuffer)).to.be.ok;
+    }
+
+    //Had to do the below, since otherwise the file did not zip in enough time.
+    function customZippingFunction(options, customFilePath) {
+      return new Promise((resolve, reject) => {
+        zipDir(
+          customFilePath || sampleZipPath,
+          options,
+          async function (err, buffer) {
+            if (err) {
+              reject(err);
+              return;
+            }
+            await fs
+              .createReadStream(xpiPath)
+              .pipe(unzip.Extract({ path: outputPath }))
+              .on("entry", (entry) => entry.autodrain())
+              .promise()
+              .then(() => resolve())
+              .catch(e=>reject(e));
+          }
+        );
+      });
+    }
+
+    it("Ensure inner folder name is not changed unless specified ", function (done) {
+      zipAndUnzip({ saveTo: xpiPath }, function () {
+        var files = [
+          "file1.json",
+          "tiny.gif",
+          "dir/file2.json",
+          "dir/file3.json",
+          "dir/deepDir/deeperDir/file4.json",
+        ];
+        files.forEach((file) => customCompareMethod(file));
+        done();
+      });
+    });
+
+    it("Ensure that with multiple files the inner folder name is changed.", function (done) {
+      zipAndUnzip({ saveTo: xpiPath, innerFolderName }, function () {
+        var files = [
+          "file1.json",
+          "tiny.gif",
+          "dir/file2.json",
+          "dir/file3.json",
+          "dir/deepDir/deeperDir/file4.json",
+        ];
+        files.forEach((file) => customCompareMethod(file, innerFolderName));
+        done();
+      });
+    });
+
+    it("compresses and unpacks and all files into ", async function () {
+      const fileFolderPath = "dir/deepDir/deeperDir";
+
+      const singleFileToBeZipped = path.join(sampleZipPath, fileFolderPath);
+      addEmpty(await customZippingFunction({ saveTo: xpiPath, innerFolderName },singleFileToBeZipped));
+
+      const fileName = "file4.json";
+      const fileToBeZippedPath = path.join(fileFolderPath, fileName);
+      const fileToBeComparedTo = path.join(innerFolderName, fileName);
+      customCompareMethod(fileToBeZippedPath, fileToBeComparedTo, false);
+    });
+  });
   describe("uses `filter` to select items", function () {
     afterEach(cleanUp);
 
